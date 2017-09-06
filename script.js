@@ -45,10 +45,12 @@ function init() {
 
 function onWindowResize( event ) {
 
-  uniforms.iResolution.value.x = window.innerWidth/2.0;
-  uniforms.iResolution.value.y = window.innerHeight/2.0;
+  var dim = Math.min(window.innerWidth,window.innerHeight);
+  uniforms.iResolution.value.x = dim;
+  uniforms.iResolution.value.y = dim;
 
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize(dim,dim );
+  
 
 }
 

@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>webgl</title>
+  <style type="text/css">
+      body {
+        padding:0px;
+        margin:0px;
+        overflow: hidden;
+        background-color: black;
+      }
+    </style>
 </head>
 <body>
   <div id="container"></div>
@@ -21,14 +29,13 @@
     
     float bailout = 8.0;
     float power = 8.0;
-    const int maxRaySteps = 40;
+    const int maxRaySteps = 25;
     float minimumStepDistance = 0.0001;
     const int iterations = 8;
-    const int colorIters = 16;
-    float eps = 0.0001;
-    float zoom = 2.0;
+    const int colorIters = 8;
+    float zoom = 1.0;
 
-    vec3 camera = vec3(0.0,2.0,1.0);
+    vec3 camera = vec3(2.0,2.0,2.0);
     vec3 focus = vec3(0.0,0.0,0.0);
     vec3 light = vec3(0.0,0.0,5.0);
 
@@ -69,7 +76,7 @@
                       zr*cos(theta) + position.z     );
         }
         //return float(i) + log(log(r*r))/log(2.0) - log(log(dot(z,z)))/log(2.0);
-        return sin(float(ii));
+        return sin(float(ii)/4.0);
 
 }
 
@@ -104,20 +111,19 @@
                             from.z + (direction.z*totalDistance));
             dist=DE(position);
             totalDistance+=dist;
-            if(totalDistance>25.0) return vec3(0.0,0.0,0.0);
+	    if(totalDistance>6.0) return vec3(0.0,0.0,0.0);
             if(dist<minimumStepDistance) {
-              return vec3(escape(position),0.7,1.0-float(steps)/float(maxRaySteps));
+              return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
             }
       }
     }
 
     void main(void) {
         //uv is between 0 and 1
-        vec2 uv = (gl_FragCoord.xy / iResolution.xy) - 0.5;
-        vec2 delta = 1.0 / iResolution.xy;
+        vec2 uv = gl_FragCoord.xy / iResolution.xy;
 
-        camera = vec3(2.0*cos(iGlobalTime/10.0),2.0*sin(iGlobalTime/10.0),-1.0);
-        power = 8.0 + 6.0*sin(iGlobalTime/10.0);
+        //camera = vec3(2.0*cos(iGlobalTime/10.0),2.0*sin(iGlobalTime/10.0),-1.0);
+        power = 8.0 + 6.0*sin(iGlobalTime/6.0);
 
         vec3 viewVector = focus - camera;
         vec3 topVector = toSpherical(viewVector);
@@ -127,12 +133,11 @@
         sideVector = normalize(sideVector)*length(topVector);
 
         float dx = zoom*(uv.x - 0.5);
-        float dy = zoom*(uv.y - 0.5)*(iResolution.y/iResolution.x);
+        float dy = (-1.0)*zoom*(uv.y - 0.5)*(iResolution.y/iResolution.x);
 
         vec3 direction = normalize((sideVector*dx) + (topVector*dy) + viewVector);
-        vec3 col = march(camera,direction);
 
-        gl_FragColor = vec4(hsv2rgb(col),1.0);
+        gl_FragColor = vec4(hsv2rgb(march(camera,direction)),1.0);
     }
 
   </script>
