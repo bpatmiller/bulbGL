@@ -3,34 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>webgl</title>
-  <style type="text/css">
-      body {
-        padding:0px;
-        margin:0px;
-        overflow: hidden;
-        background-color: black;
-      }
-    </style>
-    <script src="dat.gui.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="dat.gui.min.js"></script>
+  <script src="fullscreen-api-polyfill.min.js"></script>
 </head>
 <body>
+    <span id="info">
+    <h1>What is this?</h1>
+    The <a href="https://en.wikipedia.org/wiki/Mandelbulb">Mandelbulb</a> is a 3 dimensional fractal similar to the famous 2 dimensional Mandelbrot set. It is the set of all 3d numbers that remain stable when raised to the nth power and added to themselves. This animation goes from the 2nd power to the 14th power.
+    <h2>Specifics</h2>
+    These images were made a technique called raymarching with distance estimation. Each pixel "marches" into the distance until it becomes sufficiently close to a boundary. At this point, the pixel stops marching and is shaded based on how many steps it took to reach the boundary. Read more about this process <a href="http://9bitscience.blogspot.com/2013/07/raymarching-distance-fields_14.html">here</a>.<br>
+    In order to play or pause the animation, check the "animate" box in the menu in the top right. In order to increase or decrease the detail, adjust the "minimumStepDistance" slider.
+
+    <h2>Controls</h2>
+    Orbit around the Mandelbulb using the arrow keys.<br>
+    Move forwards and backwards using "w" and "s".<br>
+    Look around by clicking and dragging.<br>
+  </span>
   <div id="container"></div>
   <script id="vertexShader" type="x-shader/x-vertex">
-
     void main() {
       gl_Position = vec4( position, 1.0 );
     }
-
   </script>
-
   <script id="fragmentShader" type="x-shader/x-fragment">
-
     uniform vec2 iResolution;
     uniform float iGlobalTime;
     
-    const int maxRaySteps = 20;
+    const int maxRaySteps = 50;
     uniform float minimumStepDistance;
-
 
     float bailout = 8.0;
     float power = 8.0;
@@ -38,10 +39,9 @@
     const int colorIters = 8;
     float zoom = 1.0;
 
-    //uniform vec3 cameraData;
     uniform vec3 camera;
     uniform vec3 focus;
-    vec3 light = vec3(0.0,0.0,5.0);
+    //vec3 light = vec3(0.0,0.0,5.0);
 
     vec3 hsv2rgb(vec3 c) {
         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -75,12 +75,12 @@
             theta = power*atan(sqrt(z.x*z.x+z.y*z.y),z.z);
             phi = power*atan(z.y,z.x);
             zr = pow(r,power);
-        z = vec3( zr*sin(theta)*cos(phi) + position.x,
+            z = vec3( zr*sin(theta)*cos(phi) + position.x,
                       zr*sin(phi)*sin(theta) + position.y,
                       zr*cos(theta) + position.z     );
         }
         //return float(i) + log(log(r*r))/log(2.0) - log(log(dot(z,z)))/log(2.0);
-        return sin(float(ii)/4.0);
+        return 0.5 + sin(float(ii));
 
 }
 
@@ -115,7 +115,7 @@
                             from.z + (direction.z*totalDistance));
             dist=DE(position);
             totalDistance+=dist;
-	    if(totalDistance>6.0) return vec3(0.0,0.0,0.0);
+	    if(totalDistance>4.0) return vec3(0.1222,0.103,0.992);
             if(dist<minimumStepDistance) {
               return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
             }
@@ -134,17 +134,14 @@
         topVector = toRectangular(topVector);
         vec3 sideVector = cross(viewVector,topVector);
         sideVector = normalize(sideVector)*length(topVector);
-        //
+        // pixel by pixel
         float dx = zoom*(uv.x - 0.5);
         float dy = (-1.0)*zoom*(uv.y - 0.5)*(iResolution.y/iResolution.x);
 
         vec3 direction = normalize((sideVector*dx) + (topVector*dy) + viewVector);
-
         gl_FragColor = vec4(hsv2rgb(march(camera,direction)),1.0);
     }
-
   </script>
-
   <script src='https://threejs.org/build/three.min.js'></script>
   <script src="script.js"></script>
 </body>

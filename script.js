@@ -1,13 +1,13 @@
 'use strict';
 
 function gui_object() {
-  this.minimumStepDistance = 2;
+  this.minimumStepDistance = 3;
   this.animate = true;
 }
 
 var gui_data = new gui_object();
 var gui = new dat.GUI();
-var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,6,1).onChange(refresh);
+var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,6,.5).onChange(refresh);
 var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
 
 var container;
@@ -85,6 +85,13 @@ document.addEventListener("mousemove", function(event){
 },false);
 document.addEventListener("keydown",function(event){
   switch (event.keyCode) {
+    case 32:
+      console.log("yeet");
+      var elem = document.getElementById("container");
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      }    
+    break;
     case 87:
       // move the camera and the uniforms.focus.value forward along the view vector
       zooming = true;
@@ -176,9 +183,7 @@ function eDrag(x,y) {
 // END CONTROLLER STUFF //
 //////////////////////////
 
-
-
-
+render();
 animate();
 
 function refresh() {
@@ -202,6 +207,9 @@ function pause() {
 function init() {
 
   container = document.getElementById( 'container' );
+  var dim = Math.floor(Math.min(0.50*window.innerWidth,0.75*window.innerHeight));
+  container.width = dim;
+  container.height = dim;
 
   startTime = Date.now();
   camera = new THREE.Camera();
@@ -215,7 +223,7 @@ function init() {
     iGlobalTime: { type: "f", value: 1.0 },
     iResolution: { type: "v2", value: new THREE.Vector2() },
     minimumStepDistance: { type: "f", value: Math.pow(10,(-1)*gui_data.minimumStepDistance) },
-    camera: { type: "v3", value: new THREE.Vector3(2.0,1.0,1.0) },
+    camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,2.0) },
     focus: { type: "v3", value: new THREE.Vector3(0.0,0.0,0.0) }
   };
 
@@ -241,11 +249,10 @@ function init() {
 
 function onWindowResize( event ) {
 
-  var dim = Math.min(window.innerWidth,window.innerHeight);
-  uniforms.iResolution.value.x = dim;
-  uniforms.iResolution.value.y = dim;
+  uniforms.iResolution.value.x = container.width;
+  uniforms.iResolution.value.y = container.height;
 
-  renderer.setSize(dim,dim );
+  renderer.setSize( container.width, container.height );
   
 
 }
