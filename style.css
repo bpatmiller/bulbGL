@@ -15,26 +15,32 @@
       $blue:      #268bd2;
       $cyan:      #2aa198;
       $green:     #859900;
+      credits to the solarized color scheme:
+      http://ethanschoonover.com/solarized
 */
 
       body {
-        padding:6.25%;
+        padding:0px;
         margin:0px;
-        background-color: #fdf6e3;
+        background-color: #002b36;
+        overflow: hidden;
       }
       #container {
-        display: inline-block;
-        align: right;
+        display: block;
+        margin: auto;
+        width: 50%;
       }
       canvas {
-        border: solid 2px #2aa198;
+        border: solid 2px #839496;
+        display: block;
+        margin: auto;
       }
-      #info {
-        vertical-align: top;
-        color: #657b83;
-        display: inline-block;
-        width: 50%;
-        padding-right: 2em;
+      header { 
+        display: block;
+        color: #839496;
+        text-align: center;
+        background-color: #002b36;
       }
-      h1 {
+      a {
+        color: #93a1a1;
       }

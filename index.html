@@ -8,18 +8,12 @@
   <script src="fullscreen-api-polyfill.min.js"></script>
 </head>
 <body>
-    <span id="info">
-    <h1>What is this?</h1>
-    The <a href="https://en.wikipedia.org/wiki/Mandelbulb">Mandelbulb</a> is a 3 dimensional fractal similar to the famous 2 dimensional Mandelbrot set. It is the set of all 3d numbers that remain stable when raised to the nth power and added to themselves. This animation goes from the 2nd power to the 14th power.
-    <h2>Specifics</h2>
-    These images were made a technique called raymarching with distance estimation. Each pixel "marches" into the distance until it becomes sufficiently close to a boundary. At this point, the pixel stops marching and is shaded based on how many steps it took to reach the boundary. Read more about this process <a href="http://9bitscience.blogspot.com/2013/07/raymarching-distance-fields_14.html">here</a>.<br>
-    In order to play or pause the animation, check the "animate" box in the menu in the top right. In order to increase or decrease the detail, adjust the "minimumStepDistance" slider.
-
-    <h2>Controls</h2>
-    Orbit around the Mandelbulb using the arrow keys.<br>
-    Move forwards and backwards using "w" and "s".<br>
-    Look around by clicking and dragging.<br>
-  </span>
+  <header>
+    <p>
+    <a href="https://github.com/bpatmiller/bulbGL">more about this project</a> |
+    <a href="https://cs.utexas.edu/~bmiller">my website</a>
+    <p>
+  </header>
   <div id="container"></div>
   <script id="vertexShader" type="x-shader/x-vertex">
     void main() {
@@ -30,7 +24,7 @@
     uniform vec2 iResolution;
     uniform float iGlobalTime;
     
-    const int maxRaySteps = 50;
+    const int maxRaySteps = 150;
     uniform float minimumStepDistance;
 
     float bailout = 8.0;
@@ -81,7 +75,6 @@
         }
         //return float(i) + log(log(r*r))/log(2.0) - log(log(dot(z,z)))/log(2.0);
         return 0.5 + sin(float(ii));
-
 }
 
     float DE(vec3 position) {
@@ -102,6 +95,7 @@
           dr = ( pow(r, power-1.0)*power*dr ) + 1.0;        
         }
         return 0.5*log(r)*r/dr;
+        //return (0.85 - length(position)) + 0.5*log(r)*r/dr;
     }
 
     vec3 march(vec3 from, vec3 direction) {
@@ -115,7 +109,7 @@
                             from.z + (direction.z*totalDistance));
             dist=DE(position);
             totalDistance+=dist;
-	    if(totalDistance>4.0) return vec3(0.1222,0.103,0.992);
+	    if(totalDistance>4.0) return vec3(0.533,1.0,0.21);
             if(dist<minimumStepDistance) {
               return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
             }

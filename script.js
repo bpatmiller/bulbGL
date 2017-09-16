@@ -7,7 +7,7 @@ function gui_object() {
 
 var gui_data = new gui_object();
 var gui = new dat.GUI();
-var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,6,.5).onChange(refresh);
+var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,10,.5).onChange(refresh);
 var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
 
 var container;
@@ -85,13 +85,13 @@ document.addEventListener("mousemove", function(event){
 },false);
 document.addEventListener("keydown",function(event){
   switch (event.keyCode) {
-    case 32:
-      console.log("yeet");
+    /*case 32:
       var elem = document.getElementById("container");
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
       }    
-    break;
+      spaceHandler();
+    break;*/
     case 87:
       // move the camera and the uniforms.focus.value forward along the view vector
       zooming = true;
@@ -253,7 +253,6 @@ function onWindowResize( event ) {
   uniforms.iResolution.value.y = container.height;
 
   renderer.setSize( container.width, container.height );
-  
 
 }
 
