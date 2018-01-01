@@ -2,12 +2,14 @@
 
 function gui_object() {
   this.minimumStepDistance = 3;
+  this.maxRaySteps = 15;
   this.animate = true;
 }
 
 var gui_data = new gui_object();
 var gui = new dat.GUI();
 var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,10,.5).onChange(refresh);
+var ctrlSteps = gui.add(gui_data,'maxRaySteps',25,200,1).onChange(refresh);
 var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
 
 var container;
@@ -223,6 +225,7 @@ function init() {
     iGlobalTime: { type: "f", value: 1.0 },
     iResolution: { type: "v2", value: new THREE.Vector2() },
     minimumStepDistance: { type: "f", value: Math.pow(10,(-1)*gui_data.minimumStepDistance) },
+    maxRaySteps: { value: gui_data.maxRaySteps },
     camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,2.0) },
     focus: { type: "v3", value: new THREE.Vector3(0.0,0.0,0.0) }
   };
@@ -270,6 +273,8 @@ function render() {
   var currentTime = Date.now();
   uniforms.iGlobalTime.value = (currentTime - startTime) * 0.001;
   uniforms.minimumStepDistance.value = Math.pow(10,(-1)*gui_data.minimumStepDistance);
+  uniforms.maxRaySteps.value = gui_data.maxRaySteps;
+
   renderer.render( scene, camera );
 
 }

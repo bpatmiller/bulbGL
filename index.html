@@ -24,8 +24,8 @@
     uniform vec2 iResolution;
     uniform float iGlobalTime;
     
-    const int maxRaySteps = 150;
     uniform float minimumStepDistance;
+    uniform int maxRaySteps;
 
     float bailout = 8.0;
     float power = 8.0;
@@ -103,7 +103,8 @@
         float dist;
         vec3 position;
         int steps;
-        for (int steps=0;steps<maxRaySteps;steps++) {
+        for (int steps=0;steps<999;steps++) {
+            if (steps>=maxRaySteps) break;
             position = vec3(from.x + (direction.x*totalDistance),
                             from.y + (direction.y*totalDistance),
                             from.z + (direction.z*totalDistance));
