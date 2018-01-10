@@ -28,9 +28,9 @@
     uniform int colors;
     uniform float d_est_u;
     uniform int iterations;
+    uniform float power;
 
     float bailout = 8.0;
-    float power = 8.0;
     float zoom = 2.0;
 
     uniform vec3 camera;
@@ -57,26 +57,26 @@
     }
 
     float escape(vec3 position) {
-      vec3 z = position;
+        vec3 z = position;
+        float trap = 0.0;
         float r = 0.0;
         float theta,phi,zr;
         int ii;
         for(int i=0;i<129;i++) {
-          if (i>=colors) break;
-          ii=i;
+          ii = i;
+          if (i>=colors) return 1.0;//-trap/float(colors);
           r = length(z);
-            if(r>bailout) break;
-            
-            theta = power*atan(sqrt(z.x*z.x+z.y*z.y),z.z);
-            phi = power*atan(z.y,z.x);
-            zr = pow(r,power);
-            z = vec3( zr*sin(theta)*cos(phi) + position.x,
-                      zr*sin(phi)*sin(theta) + position.y,
-                      zr*cos(theta) + position.z     );
+          if (r>bailout) break;
+          trap+=r;
+
+          theta = power*atan(sqrt(z.x*z.x+z.y*z.y),z.z);
+          phi = power*atan(z.y,z.x);
+          zr = pow(r,power);
+          z = vec3( zr*sin(theta)*cos(phi) + position.x,
+                    zr*sin(phi)*sin(theta) + position.y,
+                    zr*cos(theta) + position.z     );
         }
-        //return float(i) + log(log(r*r))/log(2.0) - log(log(dot(z,z)))/log(2.0);
-        //return 1.0-(0.5*(float(ii)/float(colors)));
-        return abs(sin(0.6 + float(ii)/10.0));
+        return 0.25*((trap*log(minimumStepDistance))/(10.0*float(ii)));
 }
 
     float DE(vec3 position) {
@@ -121,7 +121,7 @@
         float dist;
         vec3 position;
         int steps;
-        for (int steps=0;steps<512;steps++) {
+        for (int steps=0;steps<256;steps++) {
             if (steps>=maxRaySteps) break;
             position = vec3(from.x + (direction.x*totalDistance),
                             from.y + (direction.y*totalDistance),
@@ -131,9 +131,8 @@
 	    //if(totalDistance>9.0) return vec3(0.533,1.0,0.21);
       if(totalDistance>max(d_est_u*2.0,4.0)) return vec3(0.0,0.0,0.0);
             if(dist<minimumStepDistance) {
-              return vec3(escape(position),0.6,0.7*(1.0-float(steps)/float(maxRaySteps)) + 0.3*phong(position));
-              //0.2*phong(position)         
-              //return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
+              //return vec3(escape(position),0.6,0.7*(1.0-float(steps)/float(maxRaySteps)) + 0.3*phong(position));
+              return vec3(escape(position),0.55,(1.0-float(steps)/float(maxRaySteps)));
             }
       }
     }
@@ -143,9 +142,6 @@
     void main(void) {
         //uv is between 0 and 1
         vec2 uv = gl_FragCoord.xy / iResolution.xy;
-        // animate through powers
-        //power = 8.0 + 6.0*sin(iGlobalTime/6.0);
-        power = 8.0;
         // compute raymarching vectors
         vec3 viewVector = focus - camera;
         vec3 topVector = toSpherical(viewVector);

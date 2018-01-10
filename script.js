@@ -1,26 +1,24 @@
 'use strict';
 
 function gui_object() {
+  this.power = 8.0;
   this.minimumStepDistance = 3;
   this.maxRaySteps = 75;
-  this.iterations = 8;
-  this.colors = 8;
-  this.speed = 0.0001;
-  this.hoverdistance = 0.01;
+  this.iterations = 16;
+  this.colors = 16;
   this.animate = false;
   this.enhance = function() {};
 }
 
 var gui_data = new gui_object();
 var gui = new dat.GUI();
-var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,10,.5).onChange(refresh);
+var ctrlPow = gui.add(gui_data,'power',-8.0,12.0).onChange(refresh);
+var ctrlStDt = gui.add(gui_data,'minimumStepDistance',1,10,.5).onChange(refresh);
 var ctrlSteps = gui.add(gui_data,'maxRaySteps',25,200,1).onChange(refresh);
 var ctrlIter = gui.add(gui_data,'iterations',4,32,1).onChange(refresh);
 var ctrlCol = gui.add(gui_data,'colors',1,32,1).onChange(refresh);
-var ctrlSpd = gui.add(gui_data,'speed',0.0001,0.05).onChange(refresh);
-var ctrlHvr = gui.add(gui_data,'hoverdistance',0.0001,0.1).onChange(refresh);
-var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
-var ctrlEnhc = gui.add(gui_data,'enhance').onChange(enhance);
+//var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
+//var ctrlEnhc = gui.add(gui_data,'enhance','zoom').onChange(enhance);
 
 var container;
 var camera, scene, renderer;
@@ -261,11 +259,12 @@ function init() {
   uniforms = {
     iGlobalTime: { type: "f", value: 1.0 },
     iResolution: { type: "v2", value: new THREE.Vector2() },
+    power: { type: "f", value: gui_data.power },
     minimumStepDistance: { type: "f", value: Math.pow(10,(-1)*gui_data.minimumStepDistance) },
     maxRaySteps: { value: gui_data.maxRaySteps },
     iterations: { type: "int", value: gui_data.iterations },
     colors: { value: gui_data.colors },
-    camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,-2.0) },
+    camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,2.0) },
     focus: { type: "v3", value: new THREE.Vector3(0.0,0.0,0.0) },
     d_est_u: { type: "f", value: d_est }
   };
@@ -306,23 +305,24 @@ function animate() {
 
   if(gui_data.animate) {
     run = requestAnimationFrame( animate );
-    advance();
+    //advance();
     render();
   }
 
 }
 
-function advance() {
+/*function advance() {
   // move camera closer to focus, find new focus
     uniforms.camera.value.x = uniforms.camera.value.x + ((uniforms.focus.value.x-uniforms.camera.value.x)*gui_data.speed);
     uniforms.camera.value.y = uniforms.camera.value.y + ((uniforms.focus.value.y-uniforms.camera.value.y)*gui_data.speed);
     uniforms.camera.value.z = uniforms.camera.value.z + ((uniforms.focus.value.z-uniforms.camera.value.z)*gui_data.speed);
-}
+}*/
 
 function render() {
 
   var currentTime = Date.now();
   uniforms.iGlobalTime.value = (currentTime - startTime) * 0.001;
+  uniforms.power.value = gui_data.power;
   uniforms.minimumStepDistance.value = Math.pow(10,(-1)*gui_data.minimumStepDistance);
   uniforms.maxRaySteps.value = gui_data.maxRaySteps;
   uniforms.colors.value = gui_data.colors;
