@@ -28,7 +28,7 @@ var pauseTime;
 var run;
 var controls;
 var d_est;
-var distanceMeter;
+var hud;
 
 init();
 
@@ -246,7 +246,7 @@ function init() {
   container.width = window.innerWidth;
   container.height = window.innerHeight;
 
-  distanceMeter = document.getElementById("distanceMeter");
+  hud = document.getElementById( 'hud' );
 
   startTime = Date.now();
   pauseTime = startTime;
@@ -327,8 +327,10 @@ function render() {
   uniforms.maxRaySteps.value = gui_data.maxRaySteps;
   uniforms.colors.value = gui_data.colors;
   uniforms.iterations.value = gui_data.iterations;
-  d_est = JSDE(uniforms.camera.value);
-  uniforms.d_est_u.value = d_est;
+  hud.innerHTML="camera:(" + uniforms.camera.value.x + "," + uniforms.camera.value.y + "," + uniforms.camera.value.z + ")" +
+        "<br>" + "focus:("  + uniforms.focus.value.x + "," + uniforms.focus.value.y + "," + uniforms.focus.value.z + ")";
+  //d_est = JSDE(uniforms.camera.value);
+  //uniforms.d_est_u.value = d_est;
 
   renderer.render( scene, camera );
 

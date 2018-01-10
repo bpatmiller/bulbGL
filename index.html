@@ -2,15 +2,13 @@
 <html >
 <head>
   <meta charset="UTF-8">
-  <title>webgl</title>
+  <title>bulbGL</title>
   <link rel="stylesheet" href="style.css">
   <script src="dat.gui.min.js"></script>
-  <script src="fullscreen-api-polyfill.min.js"></script>
 </head>
 <body>
+  <div id="hud"></div>
   <div id="container"></div>
-  <div id="distanceMeter"></div>
-
   <script id="vertexShader" type="x-shader/x-vertex">
     void main() {
       gl_Position = vec4( position, 1.0 );
@@ -109,8 +107,6 @@
   }
 
   float phong(vec3 position) {
-    // lit positioning
-    //light = camera + (vec3(0,0,d_est_u/2.0));
     vec3 k = (position - light) + (camera - light);
     vec3 h = k/length(k);
     return 0.0-dot(h,normalOf(position));
