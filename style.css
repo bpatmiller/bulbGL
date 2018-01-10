@@ -25,21 +25,20 @@
         background-color: #002b36;
         overflow: hidden;
       }
-      #container {
-        display: block;
-        margin: auto;
-        width: 50%;
-      }
+
       canvas {
-        border: solid 2px #839496;
-        display: block;
-        margin: auto;
+        width: 100%;
+        margin: 0px;
       }
       header { 
         display: block;
         color: #839496;
         text-align: center;
         background-color: #002b36;
+      }
+      #distanceMeter {
+        color: #ffffff;
+        text-align: center;
       }
       a {
         color: #93a1a1;

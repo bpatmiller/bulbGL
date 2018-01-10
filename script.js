@@ -2,15 +2,25 @@
 
 function gui_object() {
   this.minimumStepDistance = 3;
-  this.maxRaySteps = 15;
-  this.animate = true;
+  this.maxRaySteps = 75;
+  this.iterations = 8;
+  this.colors = 8;
+  this.speed = 0.0001;
+  this.hoverdistance = 0.01;
+  this.animate = false;
+  this.enhance = function() {};
 }
 
 var gui_data = new gui_object();
 var gui = new dat.GUI();
 var ctrlPow = gui.add(gui_data,'minimumStepDistance',1,10,.5).onChange(refresh);
 var ctrlSteps = gui.add(gui_data,'maxRaySteps',25,200,1).onChange(refresh);
+var ctrlIter = gui.add(gui_data,'iterations',4,32,1).onChange(refresh);
+var ctrlCol = gui.add(gui_data,'colors',1,32,1).onChange(refresh);
+var ctrlSpd = gui.add(gui_data,'speed',0.0001,0.05).onChange(refresh);
+var ctrlHvr = gui.add(gui_data,'hoverdistance',0.0001,0.1).onChange(refresh);
 var ctrlAnim = gui.add(gui_data,'animate').onChange(pause);
+var ctrlEnhc = gui.add(gui_data,'enhance').onChange(enhance);
 
 var container;
 var camera, scene, renderer;
@@ -19,6 +29,8 @@ var startTime;
 var pauseTime;
 var run;
 var controls;
+var d_est;
+var distanceMeter;
 
 init();
 
@@ -37,7 +49,7 @@ var normalize = function(vec) {
   var norm = Math.sqrt(Math.pow(vec.x,2) + Math.pow(vec.y,2) + Math.pow(vec.z,2));
   return scalarMultiply(vec,Math.pow(norm,-1));
 }
-var norm = function(vec) {
+function norm(vec) {
   return Math.sqrt(Math.pow(vec.x,2) + Math.pow(vec.y,2) + Math.pow(vec.z,2));
 }
 
@@ -185,8 +197,32 @@ function eDrag(x,y) {
 // END CONTROLLER STUFF //
 //////////////////////////
 
-render();
-animate();
+function JSDE(vec) {
+  var z = vec;
+  var dr = 1.0;
+  var r = 0.0;
+  var theta,phi,zr;
+  for(var i=0;i<8;++i) {
+    r = norm(z);
+    if (r>2.0) break;
+    theta = 8.0*Math.atan2(Math.sqrt(z.x*z.x+z.y*z.y),z.z);
+            phi = 8.0*Math.atan(z.y,z.x);
+            zr = Math.pow(r,8.0);
+        z = new THREE.Vector3(     zr*Math.sin(theta)*Math.cos(phi) + vec.x,
+                      zr*Math.sin(phi)*Math.sin(theta) + vec.y,
+                      zr*Math.cos(theta) + vec.z     );
+          dr = ( Math.pow(r, 8.0-1.0)*8.0*dr ) + 1.0;        
+  }
+  return 0.5*Math.log(r)*r/dr;
+}
+
+function enhance() { 
+    var n = JSDE(new THREE.Vector3(uniforms.camera.value.x,uniforms.camera.value.y,uniforms.camera.value.z)) / norm(new THREE.Vector3(uniforms.camera.value.x,uniforms.camera.value.y,uniforms.camera.value.z));
+    uniforms.camera.value.x = uniforms.camera.value.x + ((uniforms.focus.value.x-uniforms.camera.value.x)*n);
+    uniforms.camera.value.y = uniforms.camera.value.y + ((uniforms.focus.value.y-uniforms.camera.value.y)*n);
+    uniforms.camera.value.z = uniforms.camera.value.z + ((uniforms.focus.value.z-uniforms.camera.value.z)*n);
+    refresh();
+}
 
 function refresh() {
   if(! gui_data.animate) {
@@ -209,13 +245,14 @@ function pause() {
 function init() {
 
   container = document.getElementById( 'container' );
-  var dim = Math.floor(Math.min(0.50*window.innerWidth,0.75*window.innerHeight));
-  container.width = dim;
-  container.height = dim;
+  container.width = window.innerWidth;
+  container.height = window.innerHeight;
+
+  distanceMeter = document.getElementById("distanceMeter");
 
   startTime = Date.now();
+  pauseTime = startTime;
   camera = new THREE.Camera();
-  camera.position.z = 1;
 
   scene = new THREE.Scene();
 
@@ -226,8 +263,11 @@ function init() {
     iResolution: { type: "v2", value: new THREE.Vector2() },
     minimumStepDistance: { type: "f", value: Math.pow(10,(-1)*gui_data.minimumStepDistance) },
     maxRaySteps: { value: gui_data.maxRaySteps },
-    camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,2.0) },
-    focus: { type: "v3", value: new THREE.Vector3(0.0,0.0,0.0) }
+    iterations: { type: "int", value: gui_data.iterations },
+    colors: { value: gui_data.colors },
+    camera: { type: "v3", value: new THREE.Vector3(2.0,2.0,-2.0) },
+    focus: { type: "v3", value: new THREE.Vector3(0.0,0.0,0.0) },
+    d_est_u: { type: "f", value: d_est }
   };
 
   var material = new THREE.ShaderMaterial( {
@@ -248,6 +288,8 @@ function init() {
 
   window.addEventListener( 'resize', onWindowResize, false );
 
+  render();
+
 }
 
 function onWindowResize( event ) {
@@ -259,13 +301,22 @@ function onWindowResize( event ) {
 
 }
 
+
 function animate() {
 
   if(gui_data.animate) {
     run = requestAnimationFrame( animate );
+    advance();
     render();
   }
 
+}
+
+function advance() {
+  // move camera closer to focus, find new focus
+    uniforms.camera.value.x = uniforms.camera.value.x + ((uniforms.focus.value.x-uniforms.camera.value.x)*gui_data.speed);
+    uniforms.camera.value.y = uniforms.camera.value.y + ((uniforms.focus.value.y-uniforms.camera.value.y)*gui_data.speed);
+    uniforms.camera.value.z = uniforms.camera.value.z + ((uniforms.focus.value.z-uniforms.camera.value.z)*gui_data.speed);
 }
 
 function render() {
@@ -274,6 +325,10 @@ function render() {
   uniforms.iGlobalTime.value = (currentTime - startTime) * 0.001;
   uniforms.minimumStepDistance.value = Math.pow(10,(-1)*gui_data.minimumStepDistance);
   uniforms.maxRaySteps.value = gui_data.maxRaySteps;
+  uniforms.colors.value = gui_data.colors;
+  uniforms.iterations.value = gui_data.iterations;
+  d_est = JSDE(uniforms.camera.value);
+  uniforms.d_est_u.value = d_est;
 
   renderer.render( scene, camera );
 

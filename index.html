@@ -8,34 +8,34 @@
   <script src="fullscreen-api-polyfill.min.js"></script>
 </head>
 <body>
-  <header>
-    <p>
-    <a href="https://github.com/bpatmiller/bulbGL">more about this project</a> |
-    <a href="https://cs.utexas.edu/~bmiller">my website</a>
-    <p>
-  </header>
   <div id="container"></div>
+  <div id="distanceMeter"></div>
+
   <script id="vertexShader" type="x-shader/x-vertex">
     void main() {
       gl_Position = vec4( position, 1.0 );
     }
   </script>
   <script id="fragmentShader" type="x-shader/x-fragment">
+
+    precision highp float;
+
     uniform vec2 iResolution;
     uniform float iGlobalTime;
     
     uniform float minimumStepDistance;
     uniform int maxRaySteps;
+    uniform int colors;
+    uniform float d_est_u;
+    uniform int iterations;
 
     float bailout = 8.0;
     float power = 8.0;
-    const int iterations = 8;
-    const int colorIters = 8;
-    float zoom = 1.0;
+    float zoom = 2.0;
 
     uniform vec3 camera;
     uniform vec3 focus;
-    //vec3 light = vec3(0.0,0.0,5.0);
+    vec3 light = vec3(0.0,1.5,4.0);
 
     vec3 hsv2rgb(vec3 c) {
         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -61,7 +61,8 @@
         float r = 0.0;
         float theta,phi,zr;
         int ii;
-        for(int i=0;i<colorIters;i++) {
+        for(int i=0;i<129;i++) {
+          if (i>=colors) break;
           ii=i;
           r = length(z);
             if(r>bailout) break;
@@ -74,7 +75,8 @@
                       zr*cos(theta) + position.z     );
         }
         //return float(i) + log(log(r*r))/log(2.0) - log(log(dot(z,z)))/log(2.0);
-        return 0.5 + sin(float(ii));
+        //return 1.0-(0.5*(float(ii)/float(colors)));
+        return abs(sin(0.6 + float(ii)/10.0));
 }
 
     float DE(vec3 position) {
@@ -82,8 +84,9 @@
         float dr = 1.0;
         float r = 0.0;
         float theta,phi,zr;
-        for(int i=0;i<iterations;i++) {
-          r = length(z);
+        for(int i=0;i<64;++i) {
+            if(i>iterations) break;
+            r = length(z);
             if(r>bailout) break;
             
             theta = power*atan(sqrt(z.x*z.x+z.y*z.y),z.z);
@@ -97,31 +100,52 @@
         return 0.5*log(r)*r/dr;
         //return (0.85 - length(position)) + 0.5*log(r)*r/dr;
     }
+    
+  vec3 normalOf(vec3 pos) {
+    float eps = abs(d_est_u/100.0);
+    return normalize(vec3(DE( (pos + vec3(eps,0,0)) )-DE( (pos-vec3(eps,0,0)) ),
+                    DE( (pos+vec3(0,eps,0)))-DE(pos-vec3(0,eps,0)),
+                    DE(pos+vec3(0,0,eps))-DE(pos-vec3(0,0,eps))));     
+  }
 
-    vec3 march(vec3 from, vec3 direction) {
+  float phong(vec3 position) {
+    // lit positioning
+    //light = camera + (vec3(0,0,d_est_u/2.0));
+    vec3 k = (position - light) + (camera - light);
+    vec3 h = k/length(k);
+    return 0.0-dot(h,normalOf(position));
+  }
+
+  vec3 march(vec3 from, vec3 direction) {
       float totalDistance = 0.0;
         float dist;
         vec3 position;
         int steps;
-        for (int steps=0;steps<999;steps++) {
+        for (int steps=0;steps<512;steps++) {
             if (steps>=maxRaySteps) break;
             position = vec3(from.x + (direction.x*totalDistance),
                             from.y + (direction.y*totalDistance),
                             from.z + (direction.z*totalDistance));
             dist=DE(position);
             totalDistance+=dist;
-	    if(totalDistance>4.0) return vec3(0.533,1.0,0.21);
+	    //if(totalDistance>9.0) return vec3(0.533,1.0,0.21);
+      if(totalDistance>max(d_est_u*2.0,4.0)) return vec3(0.0,0.0,0.0);
             if(dist<minimumStepDistance) {
-              return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
+              return vec3(escape(position),0.6,0.7*(1.0-float(steps)/float(maxRaySteps)) + 0.3*phong(position));
+              //0.2*phong(position)         
+              //return vec3(escape(position),0.6,1.0-float(steps)/float(maxRaySteps));
             }
       }
     }
+
+
 
     void main(void) {
         //uv is between 0 and 1
         vec2 uv = gl_FragCoord.xy / iResolution.xy;
         // animate through powers
-        power = 8.0 + 6.0*sin(iGlobalTime/6.0);
+        //power = 8.0 + 6.0*sin(iGlobalTime/6.0);
+        power = 8.0;
         // compute raymarching vectors
         vec3 viewVector = focus - camera;
         vec3 topVector = toSpherical(viewVector);
